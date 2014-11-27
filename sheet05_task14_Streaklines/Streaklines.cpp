@@ -49,7 +49,7 @@ struct PARTICLE_VERTEX
 float box_min[3] = {0};
 float box_max[3] = {0};
 int dim[3] = {0};
-float time = 0;
+float mytime = 0;
 float stepSize = 0.004f;
 
 float seedlineA[2] = {-0.4f,-0.45f};
@@ -126,7 +126,7 @@ void display(void)
 	// update time and step size
 	glBindBuffer(GL_UNIFORM_BUFFER, ubo_Params);
 	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(float)*4, sizeof(float), &stepSize);
-	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(float)*5, sizeof(float), &time);
+    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(float)*5, sizeof(float), &mytime);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	// Bind parameters
 	uniformBlockIndex = glGetUniformBlockIndex(progAdvect, "Params");
@@ -186,7 +186,7 @@ void display(void)
 	bFirst = false;
 
 	// Let the time progress.
-	time += stepSize / (box_max[2]-box_min[2]);
+    mytime += stepSize / (box_max[2]-box_min[2]);
 }
 
 
@@ -407,7 +407,7 @@ void initParams()
 		box_min[0], box_max[0],		// xRange
 		box_min[1], box_max[1],		// yRange
 		stepSize,					// stepSize
-		time						// time
+        mytime						// time
 	};
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(float) * 6, initial, GL_STREAM_DRAW);		
 }

@@ -19,10 +19,10 @@ include_directories(${GLUT_INCLUDE_PATH})
 include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${GLEW_INCLUDE_PATH})
 
-add_executable(${PROJECT_NAME} ${SRC_LIST} ${SHADER_FILES})
+add_executable(HairyBunny ${SRC_LIST} ${SHADER_FILES})
 
 target_link_libraries(
-                        ${PROJECT_NAME}
+                        HairyBunny
                         ${GLUT_LIBRARIES}
                         ${OPENGL_LIBRARIES}
                         ${GLEW_LIBRARY}

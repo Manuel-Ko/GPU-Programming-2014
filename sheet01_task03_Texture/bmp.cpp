@@ -3,6 +3,46 @@
 #include <cstdlib>
 #include <GL/freeglut.h>
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+
+GLuint loadImage(const char *fname)
+{
+    cv::Mat image = cv::imread(std::string(fname));
+    if(image.empty())
+    {
+        std::cerr << "could not read image" << std::string(fname) << std::endl;
+        return -1;
+    }
+
+    cv::flip(image,image,0);
+    GLuint imghandle;
+
+    // TODO: Erzeugen eines Texturnames (handle).
+    glGenTextures(1, &imghandle);
+
+    // TODO: Binden der Textur. (Hinweis: Das target heißt GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, imghandle);
+
+    // TODO: Füllen der Textur. Dabei sollen automatisch mip map levels erzeugt werden. (Hinweis: Nutzen sie dafür gluBuild2DMipmaps)
+    // Es handelt sich hierbei um eine Textur mit 3 Komponenten, des Formats GL_RGB und des Typs GL_UNSIGNED_BYTE.
+    // width, height und data sind bereits oben geladen worden.
+    gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, image.cols, image.rows, GL_RGB, GL_UNSIGNED_BYTE, image.data);
+
+    // TODO: Setzen des TexParameter "GL_TEXTURE_MIN_FILTER" auf den Wert GL_LINEAR_MIPMAP_LINEAR.
+    // TODO: Setzen des TexParameter "GL_TEXTURE_MAG_FILTER" auf den Wert GL_LINEAR_MIPMAP_LINEAR.
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    // Die Textur muss nicht mehr gebunden sein.
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Zurückgeben des Texturnamens.
+    return imghandle;
+}
+
+
 GLuint loadBMP(const char *fname)
 {
 	using namespace std;

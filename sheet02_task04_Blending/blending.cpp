@@ -17,14 +17,18 @@ void drawQuad(float x, float y, float z)
 
 void display(void)	
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(1,1,1,0);
+    glClear(GL_COLOR_BUFFER_BIT);
 
 	glLoadIdentity();
 	gluLookAt(0, 0, 1, 0, 0, 0, 0, 1, 0);
 
 	// *** Farben mit Alpha Kanal setzen
+    glColor4f(1,0,0,0.5);
 	drawQuad(1, 1, -2);
+    glColor4f(0,0,1,0.5);
 	drawQuad(0.25, 0.75, -1);
+    glColor4f(0,1,0,0.5);
 	drawQuad(0.5, 0.25, 0);
 
 	glFlush();
@@ -52,7 +56,8 @@ int main(int argc, char **argv)
 	glLoadIdentity();
 
 	// *** Blending Funktion setzen
-
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
 	glutMainLoop();
 	return 0;
 }

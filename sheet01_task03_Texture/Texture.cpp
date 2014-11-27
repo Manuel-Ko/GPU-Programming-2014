@@ -1,7 +1,13 @@
-// *** Materialien und Lichter
+// ***  Materialien und Lichter
 
 #include <math.h>
-#include <GL/freeglut.h>
+#include <iostream>
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/opengl_interop.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+#include "OGLTest.h"
 
 #define PI 3.141592f
 
@@ -18,7 +24,10 @@ float oldX, oldY;
 int motionState;
 
 GLuint loadBMP(const char *fname);	// defined in bmp.cpp
+GLuint loadImage(const char *fname);
 GLuint texture;
+
+OGLTest* OGLTest::curr;
 
 void drawCube()
 {
@@ -61,10 +70,62 @@ void drawCube()
 	glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, -1.0f);
 
 	glEnd();
+
+
+
+
+
+    glNormal3f( 0.0f, 0.0f, 1.0f);
+    (0.0f, 0.0f); (-1.0f, -1.0f,  1.0f);
+    (1.0f, 0.0f); ( 1.0f, -1.0f,  1.0f);
+    (1.0f, 1.0f); ( 1.0f,  1.0f,  1.0f);
+    (0.0f, 1.0f); (-1.0f,  1.0f,  1.0f);
+    // Back Face
+
+    (1.0f, 0.0f); (-1.0f, -1.0f, -1.0f);
+    (1.0f, 1.0f); (-1.0f,  1.0f, -1.0f);
+    (0.0f, 1.0f); ( 1.0f,  1.0f, -1.0f);
+    (0.0f, 0.0f); ( 1.0f, -1.0f, -1.0f);
+    // Top Face
+
+    (0.0f, 0.0f); (-1.0f,  1.0f, -1.0f);
+    (1.0f, 0.0f); (-1.0f,  1.0f,  1.0f);
+    (1.0f, 1.0f); ( 1.0f,  1.0f,  1.0f);
+    (0.0f, 1.0f); ( 1.0f,  1.0f, -1.0f);
+    // Bottom Face
+
+    (0.0f, 0.0f); (-1.0f, -1.0f, -1.0f);
+    (1.0f, 0.0f); ( 1.0f, -1.0f, -1.0f);
+    (1.0f, 1.0f); ( 1.0f, -1.0f,  1.0f);
+    (0.0f, 1.0f); (-1.0f, -1.0f,  1.0f);
+    // Right face
+    (1.0f, 0.0f); ( 1.0f, -1.0f, -1.0f);
+    (1.0f, 1.0f); ( 1.0f,  1.0f, -1.0f);
+    (0.0f, 1.0f); ( 1.0f,  1.0f,  1.0f);
+    (0.0f, 0.0f); ( 1.0f, -1.0f,  1.0f);
+    // Left Face
+    glNormal3f(-1.0f, 0.0f, 0.0f);
+    (0.0f, 0.0f); (-1.0f, -1.0f, -1.0f);
+    (1.0f, 0.0f); (-1.0f, -1.0f,  1.0f);
+    (1.0f, 1.0f); (-1.0f,  1.0f,  1.0f);
+    (0.0f, 1.0f); (-1.0f,  1.0f, -1.0f);
+
+
+
+
+
 }
 
 void display(void)	
 {
+    // Laden der Textur
+    texture = loadImage("rockwall_color.bmp");
+    // TODO: Binden der Textur
+    // TODO: 2D-Texturierung aktivieren
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+
 	// Buffer clearen
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -127,6 +188,7 @@ void keyboard(unsigned char key, int x, int y)
 		glMatrixMode(GL_MODELVIEW);
 		break;
 	}
+    glutPostRedisplay();
 }
 
 void mouseMotion(int x, int y)
@@ -151,7 +213,7 @@ void mouseMotion(int x, int y)
 	oldX = (float)x;
 	oldY = (float)y;
 
-	glutPostRedisplay();
+//	glutPostRedisplay();
 
 }
 
@@ -177,41 +239,151 @@ void idle(void)
 	glutPostRedisplay();
 }
 
+void OGLTest::displayfunc(void*)
+{
+    curr->m_display();
+}
+
+void OGLTest::mousefunc(int event, int x, int y, int, void *)
+{
+    if(event == cv::EVENT_LBUTTONDOWN)
+    {
+        mouse(GLUT_LEFT_BUTTON, GLUT_DOWN, x, y);
+    }
+    else if(event == cv::EVENT_RBUTTONDOWN)
+    {
+        mouse(GLUT_RIGHT_BUTTON, GLUT_DOWN, x, y);
+    }
+    else if(event == cv::EVENT_MOUSEMOVE)
+    {
+        mouseMotion(x,y);
+    }
+    else
+    {
+        motionState = 0;
+    }
+}
+
+void OGLTest::setSomething(int i)
+{
+    m_something = i;
+}
+
+int OGLTest::getSomething()
+{
+    return m_something;
+}
+
+void OGLTest::makeCurrentInstance()
+{
+    curr = this;
+}
+
+void OGLTest::m_display()
+{
+    std::cout << "something = " << m_something << std::endl;
+
+    // Buffer clearen
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // View Matrix erstellen
+    glLoadIdentity();
+    float x = distance * sin(theta) * cos(phi);
+    float y = distance * cos(theta);
+    float z = distance * sin(theta) * sin(phi);
+    gluLookAt(x, y, z, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+
+    // Rendern des bunten Würfels.
+    drawCube();
+
+//    glutSwapBuffers();
+}
+
+void OGLTest::setupTextures()
+{
+    // Laden der Textur
+    texture = loadImage("rockwall_color.bmp");
+    // TODO: Binden der Textur
+    // TODO: 2D-Texturierung aktivieren
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture);
+}
+
+void OGLTest::callingFunc()
+{
+    cv::namedWindow("hahaha",cv::WINDOW_OPENGL);
+    cv::resizeWindow("hahaha",800,600);
+    cv::setOpenGlContext("hahaha");
+    setupTextures();
+    if(!initialized)
+    {
+        initGLCV();
+    }
+    curr = this;
+    cv::updateWindow("hahaha");
+}
+
+void OGLTest::initGLCV()
+{
+//    glGenVertexArrays(1,&vao);
+//    glGenBuffers(1,&ibo);
+//    glGenBuffers(1,&vert_vbo);
+//    glBindBuffer(GL_ARRAY_BUFFER, vert_vbo);
+//    glBufferData(GL_ARRAY_BUFFER,6*4*3*sizeof(float),verts,GL_STATIC_DRAW);
+//    glBindBuffer(GL_ARRAY_BUFFER, tex_vbo);
+//    glBufferData(GL_ARRAY_BUFFER, 6*4*2*sizeof(float),texcoords,GL_STATIC_DRAW);
+//    glBindBuffer(GL_ARRAY_BUFFER,0)
+
+//    glGenBuffers(1,&tex_vbo);
+
+    cv::setOpenGlDrawCallback("hahaha",OGLTest::displayfunc);
+    cv::setMouseCallback("hahaha",OGLTest::mousefunc);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FLAT);
+    glShadeModel(GL_FLAT);
+
+    glViewport(0,0,width,height);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    initialized = true;
+}
 
 int main(int argc, char **argv)
 {
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(width, height);
-	glutCreateWindow("Texturierung");
+//	glutInit(&argc, argv);
+//	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+//	glutInitWindowSize(width, height);
+//	glutCreateWindow("Texturierung");
 
-	glutDisplayFunc(display);
-	glutMotionFunc(mouseMotion);
-	glutMouseFunc(mouse);
-	glutIdleFunc(idle);
-	glutKeyboardFunc(keyboard);
 
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
+    OGLTest foo = OGLTest();
+
+//    glutDisplayFunc(OGLTest::displayfunc);
+//	glutMotionFunc(mouseMotion);
+//	glutMouseFunc(mouse);
+//	glutIdleFunc(idle);
+//	glutKeyboardFunc(keyboard);
+
+//	glEnable(GL_LIGHTING);
+//	glEnable(GL_LIGHT0);
 	
-	glEnable(GL_DEPTH_TEST);
+//	glEnable(GL_DEPTH_TEST);
 
-	glViewport(0,0,width,height);					
-	glMatrixMode(GL_PROJECTION);					
-	glLoadIdentity();								
 
-	gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	// Laden der Textur
-	texture = loadBMP("rockwall_color.bmp");
-	// TODO: Binden der Textur			
-	// TODO: 2D-Texturierung aktivieren
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	glutMainLoop();
+    int key = 0;
+    while(key != 1048603)
+    {
+        foo.setSomething(foo.getSomething()+1);
+        foo.callingFunc();
+//        glutMainLoopEvent();
+        key = cv::waitKey(1);
+    }
 	return 0;
 }

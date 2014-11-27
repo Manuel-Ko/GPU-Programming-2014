@@ -28,7 +28,7 @@ int height = 512;
 // uniform locations
 GLint uniformTime;
 const char* name_uniformTime = "Time";
-GLfloat time = 0;
+GLfloat mytime = 0;
 
 bool usePumping = true;
 
@@ -176,7 +176,7 @@ void display()
 	if (usePumping) {
 		glUseProgram( shaderProgramPumping );
 		// TODO: Den Zeitparameter (uniform) aktualisieren.
-		glUniform1f(uniformTime,time);
+        glUniform1f(uniformTime,mytime);
 	}
 	else {
 		glUseProgram( 0 );
@@ -196,7 +196,7 @@ void display()
 	alpha += 1;
 
 	// TODO: Inkrementieren des Zeit Parameters.
-	time += 0.1*M_PI;
+    mytime += 0.1*M_PI;
 
 	// Swap display buffers
 	glutSwapBuffers();

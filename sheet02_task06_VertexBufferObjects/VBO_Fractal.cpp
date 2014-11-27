@@ -1,7 +1,9 @@
 // VBO_Fractal
 // TODO: Check if GLEW is required, remove ARB extension
 
+
 #include <iostream>
+#include <stdio.h>
 #include <vector>
 
 #include <GL/glew.h>
@@ -67,6 +69,33 @@ Vector startP3(0.0f, 1.0f, 0.0f);
 
 int globalIndex = 0;
 int maxLevel = 10;
+
+unsigned int queryID[2][1];
+unsigned int queryBackBuffer = 0, queryFrontBuffer = 1;
+u_int64_t timer;
+
+// call this function when initializating the OpenGL settings
+void genQueries() {
+
+    glGenQueries(1, queryID[queryBackBuffer]);
+    glGenQueries(1, queryID[queryFrontBuffer]);
+
+    // dummy query to prevent OpenGL errors from popping out
+    glQueryCounter(queryID[queryFrontBuffer][0], GL_TIMESTAMP);
+}
+
+// aux function to keep the code simpler
+void swapQueryBuffers() {
+
+    if (queryBackBuffer) {
+        queryBackBuffer = 0;
+        queryFrontBuffer = 1;
+    }
+    else {
+        queryBackBuffer = 1;
+        queryFrontBuffer = 0;
+    }
+}
 
 void generateTriangle(Vector p0, Vector p1, Vector p2)
 {
@@ -265,7 +294,15 @@ void drawDisplayList()
 
 void display()
 {
+    GLenum error;
 	int timeStart = glutGet(GLUT_ELAPSED_TIME);
+    glGetError();
+    glBeginQuery(GL_TIME_ELAPSED,queryID[queryBackBuffer][0]);
+    error = glGetError();
+    if(error != GL_NO_ERROR)
+    {
+        printf("an error occuered on beginquery\n");
+    }
 
 	// clear buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -290,29 +327,29 @@ void display()
 	}
 	else {  
 		// simple and slow drawing
-		//drawSimpleAndSlow();
+        drawSimpleAndSlow();
 
 		// using display list
-		//drawDisplayList(); // DAFUQ!?! WIESO IST DAS SOOOOOO VIEL LANGSAMER!??
-		if(!glIsList(1))
-		{
-			glNewList(1, GL_COMPILE);
-			glBegin(GL_TRIANGLES);
-			for (unsigned int i = 0 ; i < positions.size() ; i += 3) {
-				glNormal3fv(&normals[i][0]);
-				glVertex3fv(&positions[i][0]);
-				glNormal3fv(&normals[i+1][0]);
-				glVertex3fv(&positions[i+1][0]);
-				glNormal3fv(&normals[i+2][0]);
-				glVertex3fv(&positions[i+2][0]);
-			}
-			glEnd();
-			glEndList();
-		}
-		else
-		{
-			glCallList(1);
-		}/**/
+        //drawDisplayList(); // DAFUQ!?! WIESO IST DAS SOOOOOO VIEL LANGSAMER!??
+//		if(!glIsList(1))
+//		{
+//			glNewList(1, GL_COMPILE);
+//			glBegin(GL_TRIANGLES);
+//			for (unsigned int i = 0 ; i < positions.size() ; i += 3) {
+//				glNormal3fv(&normals[i][0]);
+//				glVertex3fv(&positions[i][0]);
+//				glNormal3fv(&normals[i+1][0]);
+//				glVertex3fv(&positions[i+1][0]);
+//				glNormal3fv(&normals[i+2][0]);
+//				glVertex3fv(&positions[i+2][0]);
+//			}
+//			glEnd();
+//			glEndList();
+//		}
+//		else
+//		{
+//			glCallList(1);
+//		}/**/
 
 	}
 
@@ -324,7 +361,22 @@ void display()
 
 	// measure frame time in milliseconds
 	int timeEnd = glutGet(GLUT_ELAPSED_TIME);
-	printf("Delay %d     \r",timeEnd - timeStart);
+    glEndQuery(GL_TIME_ELAPSED);
+    error = glGetError();
+    if(error != GL_NO_ERROR)
+    {
+        printf("an error occuered on endquery\n");
+    }
+    glGetQueryObjectui64v(queryID[queryFrontBuffer][0],
+                        GL_QUERY_RESULT, &timer);
+    error = glGetError();
+    if(error != GL_NO_ERROR)
+    {
+        printf("an error occuered on getquery\n");
+    }
+    swapQueryBuffers();
+    printf("myDelay %f ms\n", timer/(double)1000000);
+    printf("Delay %d\n",timeEnd - timeStart);
 }
 
 // use a virtual trackball as mouse control
@@ -376,6 +428,14 @@ void keyboard(unsigned char key, int x, int y)
 	switch (key) {
 	case ' ':
 		useVBO = !useVBO;
+        if(useVBO)
+        {
+            printf("-------Using VBO--------\n");
+        }
+        else
+        {
+            printf("----------using other method------------\n");
+        }
 		break;
 	}
 
@@ -398,6 +458,8 @@ void initGL()
 	glLoadIdentity();
 
 	glClearColor(0.5, 0.5, 1.0, 1.0);
+
+    genQueries();
 }
 
 

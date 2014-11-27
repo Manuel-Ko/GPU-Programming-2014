@@ -19,10 +19,10 @@ include_directories(${OPENGL_INCLUDE_DIR})
 
 
 
-add_executable(${PROJECT_NAME} ${SRC_LIST})
+add_executable(VBO ${SRC_LIST})
 
 target_link_libraries(
-                        ${PROJECT_NAME}
+                        VBO
                         ${GLUT_LIBRARIES}
                         ${OPENGL_LIBRARIES}
                         ${GLEW_LIBRARY}
